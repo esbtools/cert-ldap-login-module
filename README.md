@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/esbtools/jboss-cert-ldap-login-module.svg?branch=master)](https://travis-ci.org/esbtools/jboss-cert-ldap-login-module.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/esbtools/jboss-cert-ldap-login-module/badge.svg?branch=master&service=github)](https://coveralls.io/github/esbtools/jboss-cert-ldap-login-module?branch=master)
+
 # How to configure auntn/authz on JBoss
 
 In standalone.xml:
