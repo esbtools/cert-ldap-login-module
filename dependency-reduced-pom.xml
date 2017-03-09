@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>oss-parent</artifactId>
+    <groupId>org.sonatype.oss</groupId>
+    <version>7</version>
+    <relativePath>pom.xml</relativePath>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.esbtools.auth</groupId>
   <artifactId>jboss-cert-ldap-login-module</artifactId>
   <name>${project.groupId}|${project.artifactId}</name>
   <version>1.0.0-SNAPSHOT</version>
+  <licenses>
+    <license>
+      <name>GNU GENERAL PUBLIC LICENSE, Version 3, 29 June 2007</name>
+      <url>http://www.gnu.org/licenses/gpl-3.0-standalone.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:https://github.com/esbtools/jboss-cert-ldap-login-module.git</connection>
+    <developerConnection>scm:git:git@github.com:esbtools/jboss-cert-ldap-login-module.git</developerConnection>
+    <url>https://github.com/esbtools/jboss-cert-ldap-login-module</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
