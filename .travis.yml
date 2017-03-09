@@ -1,0 +1,27 @@
+language: java
+jdk:
+- openjdk7
+- oraclejdk8
+sudo: false
+before_install:
+- cp ./etc/settings.xml ~/.m2/
+- cp ./etc/onTravisBuildFailure.sh  ~/
+- cp ./etc/onTravisBuildSuccess.sh  ~/
+- chmod 777 ~/onTravisBuildFailure.sh
+- chmod 777 ~/onTravisBuildSuccess.sh
+script:
+- mvn -B clean verify
+after_failure: "~/onTravisBuildFailure.sh"
+after_success: "~/onTravisBuildSuccess.sh"
+after_script:
+- mvn clean -DsourceEncoding=UTF-8 cobertura:cobertura coveralls:report
+notifications:
+  email: false
+  irc:
+    channels:
+    - chat.freenode.net#esbtools
+    on_success: always
+env:
+  global:
+  - secure: wlQueZd9EJpLl3oFXAGPdFfhvz4PkTB2ol0k12hoi/jVTceOTOGAXlu39CoLVvVwDZRPeYyDQi7PaR9ZnrYd0mFdtrSC5oElw+g/149O77kmu1WBgUE9XcwWKeqKmglHIV1X63qH1GgwS9K8GxJlM9sz0grMlGWs0+OI3au7FBz4B3NsL4X9MlK6Ia5WcqtBtV8d9Ht/gCITMXOm0CWLcILgM1QcKkcsfE3vO6hDGIYsWtOWckT784m3d2ZXUp+6V6H6CFmD3xmCyywsqUK4FzgOhAlzbdMXUcMHcwYCzWGNfSyLlxXjP2ZvOFWhvvz2prwbx0nVEfq2KupGSkXBEDnAwOwUmcuF09FBhLgRrutAiKGOnkihfAvZX1d+D+gXt+qV1U3wpJksvhwF1twfOrVhY0wb0MjdTkYKTS2yhncCSAbX+b2y/8T5458W1VfciO5AnZa6BrhZ00NmSRBlkvQTVLx1szocNKEIWZz6iBSSrbYrCpWosFzTNU6m8SKssohZlF0FlHS89aJiRKseTlUmUi0Ci57JoS7BhaJmsO0QDxgHvMu/qfLy/jw1WlDIunbgwuxPUFwXuk5ViKxp7e+R7gNtwgaitDd67n22k0vhFAy7aHdwvsSEnVjMXsckuu55XkmHBNnQMIhXj4CE2nUpU969bY06lWBsrkQyj+Q=
+  - secure: FufnOZkiPAP50UyXNq1vWuTHNzh0ptGA0eLJ6VlpeG4qggKYR0aL7ahjQExdPvjIM53GOalcCsJ181v7pQUKGpah4zuyACM+GMo/hFXiKn9/kTurJD5E0m3x8lXW2Ws7sXzB9VdF4Z/tUNYiStYqxlrL1RDW+zIN+Qha3S0mudQyQcqn1n7F9j63JnsmlPa9seu6jfXD3qD2rkU1HJbX2FBUHdgooyQm63UrlrT203GW45FrDqk7ucOyQckveO/Fq1jaab0vLeH6UIQtuX81tBV9mgbk3P5XUi7/7Nvl1jJwqlmUmCQh63RnAMR9IOTIrUP3kKA/dPcxgrfEygBbWGuXdjJNZArBRp2Ok3oBGRgiRbvtF0joVI1UNyRkOC/JVhTgkBaFXXMgUKGX+jYhPxFXpWToS6BLY6wdnMq4T8HRuubpFlVIhTCYqFkUsCjpkql+FcxpJYtdTE9ebYmLQk4yDPpCgeq9j/VmBG+K5xPJa+z9ruLB5rSeu52B70x0U9iTjy6+dAku9xgf+WRoQQaTANccWaCPKIBRGyHaoSsxMQMG+e9lYCPzX0NfMGibyUHBeWwJ650MtmRkIetbykCgbC5GslllaaGdM8c8wxnshpxvPtfKuIS9nUR5gigtAk9cp+Nv8nl2g7UHzbng/yl/TJrMQW/Omdwx50tZeIo=
