@@ -1,5 +1,5 @@
 /*
- Copyright 2017esbtools Contributors and/or its affiliates.
+ Copyright 2017 esbtools Contributors and/or its affiliates.
 
  This file is part of esbtools.
 
