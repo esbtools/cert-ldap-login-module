@@ -16,7 +16,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.esbtools.auth;
+package org.esbtools.auth.jboss;
 
 import org.esbtools.auth.ldap.LdapConfiguration;
 import org.esbtools.auth.ldap.LdapRolesProvider;
