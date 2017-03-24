@@ -62,7 +62,8 @@ public class RequestDumper extends HttpServlet implements Servlet {
         buf.append("isRequestedSessionIdValid: [").append(request.isRequestedSessionIdValid()).append("]\n");
         buf.append("isSecure: [").append(request.isSecure()).append("]\n");
         buf.append("In authenticated role?: [").append(request.isUserInRole("authenticated")).append("]\n");
-        buf.append("In lb-terms-find role?: [").append(request.isUserInRole("lb-terms-find")).append("]\n");
+        buf.append("In read role?: [").append(request.isUserInRole("read")).append("]\n");
+        buf.append("In write role?: [").append(request.isUserInRole("write")).append("]\n");
 
         buf.append("\n\n");
 
