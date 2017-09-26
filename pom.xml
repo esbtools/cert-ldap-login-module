@@ -11,7 +11,8 @@
   <artifactId>jboss-cert-ldap-login-module</artifactId>
   <version>1.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>${project.groupId}|${project.artifactId}</name>
+  <name>esbtools: ${project.groupId}|${project.artifactId}</name>
+  <description>ESB Gateways</description>
   <licenses>
     <license>
       <name>GNU GENERAL PUBLIC LICENSE, Version 3, 29 June 2007</name>
@@ -25,6 +26,15 @@
     <url>https://github.com/esbtools/jboss-cert-ldap-login-module</url>
     <tag>HEAD</tag>
   </scm>
+  <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <maven.compiler.showWarnings>true</maven.compiler.showWarnings>
+      <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
+      <maven.compiler.debuglevel>lines,vars,source</maven.compiler.debuglevel>
+      <maven.compiler.verbose>true</maven.compiler.verbose>
+      <sonar.projectName>esbtools: jboss-cert-ldap-login-module</sonar.projectName>
+      <sonar.exclusions>**/*Test.java,**/*Exception.java</sonar.exclusions>
+  </properties>
   <repositories>
     <repository>
       <id>jboss</id>
