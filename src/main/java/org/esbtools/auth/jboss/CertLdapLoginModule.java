@@ -64,12 +64,18 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     public static final String KEEP_ALIVE = "keepAlive";
     public static final String ROLES_CACHE_EXPIRY_MS = "rolesCacheExpiryMS";
     public static final String ENVIRONMENT = "environment";
+    public static final String ALL_ACCESS_OU = "allAccessOu";
 
-    private static final String[] ALL_VALID_OPTIONS = {AUTH_ROLE_NAME, SERVER, PORT, SEARCH_BASE, BIND_DN, BIND_PWD, USE_SSL, TRUST_STORE, TRUST_STORE_PASSWORD, POOL_SIZE, POOL_MAX_CONNECTION_AGE_MS, ENVIRONMENT,CONNECTION_TIMEOUT_MS,RESPONSE_TIMEOUT_MS,DEBUG,KEEP_ALIVE,ROLES_CACHE_EXPIRY_MS};
+    private static final String[] ALL_VALID_OPTIONS = {
+            AUTH_ROLE_NAME, SERVER, PORT, SEARCH_BASE, BIND_DN, BIND_PWD, USE_SSL,
+            TRUST_STORE, TRUST_STORE_PASSWORD, POOL_SIZE, POOL_MAX_CONNECTION_AGE_MS,
+            CONNECTION_TIMEOUT_MS,RESPONSE_TIMEOUT_MS,DEBUG,KEEP_ALIVE,
+            ROLES_CACHE_EXPIRY_MS, ENVIRONMENT, ALL_ACCESS_OU};
 
     public static final String UID = "uid";
     public static final String CN = "cn";
     public static final String LOCATION = "l";
+    public static final String OU = "ou";
 
     private static String environment;
 
@@ -183,11 +189,25 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     }
 
     private void validateEnvironment(String certificatePrincipal) throws NamingException {
-        if(StringUtils.isNotBlank(environment)) {
-            String location = getLDAPAttribute(certificatePrincipal, LOCATION);
 
-            if(!StringUtils.equals(environment, location)) {
-                throw new NoSuchAttributeException("Location from certificate does not match configured environment");
+        String ou = getLDAPAttribute(certificatePrincipal, OU);
+        String location = getLDAPAttribute(certificatePrincipal, LOCATION);
+
+        if(StringUtils.isBlank(ou)) {
+            throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
+        } else {
+            if(ALL_ACCESS_OU.equalsIgnoreCase(StringUtils.replace(ou, " ", ""))){
+                LOGGER.debug("Skipping environment validation, user ou matches {} ", ALL_ACCESS_OU);
+            } else {
+                //if dn not from allAccessOu, verify the location (l) field
+                //in the cert matches the configured environment
+                if(StringUtils.isBlank(location)) {
+                    throw new NoSuchAttributeException("No location in dn, you may need to update your certificate: " + certificatePrincipal);
+                } else if (StringUtils.isBlank(ou)){
+                    throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
+                } else if(!environment.equalsIgnoreCase(location)){
+                    throw new NoSuchAttributeException("Invalid location from dn, expected " + environment + " but found l=" + location);
+                }
             }
         }
     }
