@@ -191,7 +191,9 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     private void validateEnvironment(String certificatePrincipal) throws NamingException {
 
         String ou = getLDAPAttribute(certificatePrincipal, OU);
+        LOGGER.debug("OU from certificate: ", OU);
         String location = getLDAPAttribute(certificatePrincipal, LOCATION);
+        LOGGER.debug("Location from certificate: ", LOCATION);
 
         if(StringUtils.isBlank(ou)) {
             throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
