@@ -78,6 +78,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     public static final String OU = "ou";
 
     private static String environment;
+    private static String allAccessOu;
 
     private static volatile RolesProvider rolesProvider = null;
 
@@ -94,6 +95,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
             synchronized(LdapRolesProvider.class) {
                 if (rolesProvider == null) {
                     environment = (String) options.get(ENVIRONMENT);
+                    allAccessOu = (String) options.get(ALL_ACCESS_OU);
 
                     LdapConfiguration ldapConf = new LdapConfiguration();
                     ldapConf.server((String) options.get(SERVER));
@@ -191,15 +193,15 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     private void validateEnvironment(String certificatePrincipal) throws NamingException {
 
         String ou = getLDAPAttribute(certificatePrincipal, OU);
-        LOGGER.debug("OU from certificate: ", OU);
+        LOGGER.debug("OU from certificate: ", ou);
         String location = getLDAPAttribute(certificatePrincipal, LOCATION);
-        LOGGER.debug("Location from certificate: ", LOCATION);
+        LOGGER.debug("Location from certificate: ", location);
 
         if(StringUtils.isBlank(ou)) {
             throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
         } else {
-            if(ALL_ACCESS_OU.equalsIgnoreCase(StringUtils.replace(ou, " ", ""))){
-                LOGGER.debug("Skipping environment validation, user ou matches {} ", ALL_ACCESS_OU);
+            if(allAccessOu.equalsIgnoreCase(StringUtils.replace(ou, " ", ""))){
+                LOGGER.debug("Skipping environment validation, user ou matches {} ", allAccessOu);
             } else {
                 //if dn not from allAccessOu, verify the location (l) field
                 //in the cert matches the configured environment
