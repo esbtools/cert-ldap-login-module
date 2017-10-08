@@ -191,7 +191,9 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     private void validateEnvironment(String certificatePrincipal) throws NamingException {
 
         String ou = getLDAPAttribute(certificatePrincipal, OU);
+        LOGGER.debug("OU from certificate: ", OU);
         String location = getLDAPAttribute(certificatePrincipal, LOCATION);
+        LOGGER.debug("Location from certificate: ", LOCATION);
 
         if(StringUtils.isBlank(ou)) {
             throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
@@ -203,8 +205,6 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
                 //in the cert matches the configured environment
                 if(StringUtils.isBlank(location)) {
                     throw new NoSuchAttributeException("No location in dn, you may need to update your certificate: " + certificatePrincipal);
-                } else if (StringUtils.isBlank(ou)){
-                    throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
                 } else if(!environment.equalsIgnoreCase(location)){
                     throw new NoSuchAttributeException("Invalid location from dn, expected " + environment + " but found l=" + location);
                 }
