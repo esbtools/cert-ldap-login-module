@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.esbtools.auth.ldap.LdapConfiguration;
 import org.esbtools.auth.ldap.LdapRolesProvider;
 import org.esbtools.auth.util.CachedRolesProvider;
-import org.esbtools.auth.util.EnvironmentUtils;
+import org.esbtools.auth.util.Environment;
 import org.esbtools.auth.util.RolesCache;
 import org.esbtools.auth.util.RolesProvider;
 import org.jboss.security.SimpleGroup;
@@ -73,7 +73,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     public static final String UID = "uid";
     public static final String CN = "cn";
 
-    private static volatile EnvironmentUtils envUtils;
+    private static volatile Environment envUtils;
     private static volatile RolesProvider rolesProvider = null;
 
     @Override
@@ -90,7 +90,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
                 if (rolesProvider == null) {
                     String environment = (String) options.get(ENVIRONMENT);
                     String allAccessOu = (String) options.get(ALL_ACCESS_OU);
-                    envUtils = new EnvironmentUtils(environment, allAccessOu);
+                    envUtils = new Environment(environment, allAccessOu);
 
                     LdapConfiguration ldapConf = new LdapConfiguration();
                     ldapConf.server((String) options.get(SERVER));
@@ -155,7 +155,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
             String searchName = envUtils.getLDAPAttribute(certPrincipal, UID);
             if(StringUtils.isNotBlank(searchName)) {
                 //only try to validate environment if it is a certificate that contains uid
-                envUtils.validateEnvironment(certPrincipal);
+                envUtils.validate(certPrincipal);
             } else {
                 // fallback to getting search name from cn in certificate principle (legacy certificates)
                 searchName = envUtils.getLDAPAttribute(certPrincipal, CN);

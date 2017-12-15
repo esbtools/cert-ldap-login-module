@@ -2,6 +2,7 @@ package org.esbtools.auth.util;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.naming.NamingException;
 import javax.naming.directory.NoSuchAttributeException;
@@ -12,9 +13,9 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EnvironmentUtils {
+public class Environment {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(EnvironmentUtils.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(Environment.class);
 
     public static final String ENVIRONMENT_SEPARATOR = ",";
     public static final String LOCATION = "l";
@@ -31,20 +32,18 @@ public class EnvironmentUtils {
         return allAccessOu;
     }
 
-    public EnvironmentUtils(String environment) {
+    public Environment(String environment) {
         this(environment, null);
     }
 
-    public EnvironmentUtils(String environment, String allAccessOu) {
-        if (environment == null) {
-            throw new NullPointerException("environment cannot be null");
-        }
+    public Environment(String environment, String allAccessOu) {
+        Objects.requireNonNull(environment);
 
         this.environment = environment;
         this.allAccessOu = allAccessOu;
     }
 
-    public void validateEnvironment(String certificatePrincipal) throws NamingException {
+    public void validate(String certificatePrincipal) throws NamingException {
 
         String ou = getLDAPAttribute(certificatePrincipal, OU);
         LOGGER.debug("OU from certificate: ", ou);

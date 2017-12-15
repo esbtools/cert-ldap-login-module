@@ -9,7 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.esbtools.auth.util.EnvironmentUtils;
+import org.esbtools.auth.util.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
@@ -21,10 +21,10 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CertEnvironmentVerificationFilter.class);
 
-  private final EnvironmentUtils envUtils;
+  private final Environment envUtils;
 
   public CertEnvironmentVerificationFilter(String environment) {
-    envUtils = (null == environment) ? null : new EnvironmentUtils(environment);
+    envUtils = (null == environment) ? null : new Environment(environment);
 
     LOGGER.info("Cert Environment: " + ((environment == null) ? "Not Set" : environment));
   }
@@ -40,7 +40,7 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
       if ((null != certChain) && (certChain.length > 0)) {
         LOGGER.debug("Verifying environment on cert");
         try {
-          envUtils.validateEnvironment(dn);
+          envUtils.validate(dn);
         }
         catch (NamingException e) {
           unsuccessfulAuthentication(request, response,
