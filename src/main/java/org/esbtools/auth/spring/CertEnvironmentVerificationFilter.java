@@ -3,16 +3,13 @@ package org.esbtools.auth.spring;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 
-import javax.annotation.Nullable;
 import javax.naming.NamingException;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
+import org.esbtools.auth.util.EnvironmentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
@@ -24,19 +21,17 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CertEnvironmentVerificationFilter.class);
 
-  public static final String LOCATION = "l";
+  private final EnvironmentUtils envUtils;
 
-  private final String environment;
-
-  public CertEnvironmentVerificationFilter(@Nullable String environment) {
-    this.environment = environment;
+  public CertEnvironmentVerificationFilter(String environment) {
+    envUtils = (null == environment) ? null : new EnvironmentUtils(environment);
 
     LOGGER.info("Cert Environment: " + ((environment == null) ? "Not Set" : environment));
   }
 
   @Override
   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-    if (null != environment) {
+    if (null != envUtils) {
       LOGGER.debug("Attempting Environment Cert verification");
       X509Certificate certChain[] = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
 
@@ -44,10 +39,12 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
 
       if ((null != certChain) && (certChain.length > 0)) {
         LOGGER.debug("Verifying environment on cert");
-        if(!validateEnvironment(dn)) {
+        try {
+          envUtils.validateEnvironment(dn);
+        }
+        catch (NamingException e) {
           unsuccessfulAuthentication(request, response,
-              new CertEnvironmentAuthenticationException(
-                  "Location from certificate does not match configured environment"));
+              new CertEnvironmentAuthenticationException(e.getMessage()));
           return; //end the chain
         }
       }
@@ -60,34 +57,6 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
     }
 
     chain.doFilter(request, response);
-  }
-
-  private boolean validateEnvironment(String certificatePrincipal) {
-    if (StringUtils.isNotBlank(environment)) {
-      try {
-        String location = getLDAPAttribute(certificatePrincipal, LOCATION);
-
-        if (!StringUtils.equalsIgnoreCase(environment, location)) {
-          return false;
-        }
-      } catch (NamingException e) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private String getLDAPAttribute(String certificatePrincipal, String searchAttribute) throws NamingException {
-    String searchName = new String();
-    LdapName name = new LdapName(certificatePrincipal);
-    for (Rdn rdn : name.getRdns()) {
-      if (rdn.getType().equalsIgnoreCase(searchAttribute)) {
-        searchName = (String) rdn.getValue();
-        break;
-      }
-    }
-    return searchName;
   }
 
   /**
