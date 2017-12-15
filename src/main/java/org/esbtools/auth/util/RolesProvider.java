@@ -31,9 +31,9 @@ public interface RolesProvider {
     /**
      * Get roles for given user.
      *
-     * @param username
+     * @param username The user name to get roles for
      * @return A set of roles. If no roles are found, returns an empty set. Never returns null.
-     * @throws Exception
+     * @throws Exception if any issue is encounter while acquiring the roles
      */
     public Set<String> getUserRoles(String username) throws Exception;
 
