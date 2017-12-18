@@ -35,10 +35,9 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
       LOGGER.debug("Attempting Environment Cert verification");
       X509Certificate certChain[] = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
 
-      String dn = certChain[0].getSubjectDN().getName();
-
       if ((null != certChain) && (certChain.length > 0)) {
         LOGGER.debug("Verifying environment on cert");
+        String dn = certChain[0].getSubjectDN().getName();
         try {
           envUtils.validate(dn);
         }
