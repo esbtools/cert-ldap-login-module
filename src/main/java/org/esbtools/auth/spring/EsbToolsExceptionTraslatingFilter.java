@@ -35,11 +35,13 @@ public class EsbToolsExceptionTraslatingFilter extends GenericFilterBean {
 
             SecurityContextHolder.clearContext();
 
-            if (response instanceof HttpServletResponse) {
-                ((HttpServletResponse) response).setStatus(writer.getStatus().getStatusCode());
+            if ((response instanceof HttpServletResponse) && writer.status != null) {
+                ((HttpServletResponse) response).setStatus(writer.status.getStatusCode());
             }
 
-            response.setContentType(writer.getContentType());
+            if (writer.contentType != null) {
+                response.setContentType(writer.contentType);
+            }
             response.getWriter().write(writer.print(e));
             response.getWriter().close();
         }
@@ -47,15 +49,11 @@ public class EsbToolsExceptionTraslatingFilter extends GenericFilterBean {
 
     public abstract static class ErrorResponseWriter {
 
-        private final Response.Status status;
-        private final String contentType;
+        public final Response.Status status;
+        public final String contentType;
 
-        public Response.Status getStatus() {
-            return status;
-        }
-
-        public String getContentType() {
-            return contentType;
+        public ErrorResponseWriter() {
+            this(null, null);
         }
 
         public ErrorResponseWriter(String contentType, Response.Status status) {
