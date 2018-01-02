@@ -73,7 +73,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     public static final String UID = "uid";
     public static final String CN = "cn";
 
-    private static volatile Environment envUtils;
+    private static volatile Environment environment;
     private static volatile RolesProvider rolesProvider = null;
 
     @Override
@@ -88,9 +88,9 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
         if (rolesProvider == null) {
             synchronized(LdapRolesProvider.class) {
                 if (rolesProvider == null) {
-                    String environment = (String) options.get(ENVIRONMENT);
+                    String env = (String) options.get(ENVIRONMENT);
                     String allAccessOu = (String) options.get(ALL_ACCESS_OU);
-                    envUtils = new Environment(environment, allAccessOu);
+                    environment = new Environment(env, allAccessOu);
 
                     LdapConfiguration ldapConf = new LdapConfiguration();
                     ldapConf.server((String) options.get(SERVER));
@@ -152,13 +152,13 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
             LOGGER.debug("Certificate principal:" + certPrincipal);
 
             //first try getting search name from uid in certificate principle (new certificates)
-            String searchName = envUtils.getLDAPAttribute(certPrincipal, UID);
+            String searchName = environment.getLDAPAttribute(certPrincipal, UID);
             if(StringUtils.isNotBlank(searchName)) {
                 //only try to validate environment if it is a certificate that contains uid
-                envUtils.validate(certPrincipal);
+                environment.validate(certPrincipal);
             } else {
                 // fallback to getting search name from cn in certificate principle (legacy certificates)
-                searchName = envUtils.getLDAPAttribute(certPrincipal, CN);
+                searchName = environment.getLDAPAttribute(certPrincipal, CN);
             }
 
             Collection<String> groupNames = rolesProvider.getUserRoles(searchName);
