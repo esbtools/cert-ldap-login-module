@@ -2,7 +2,6 @@ package org.esbtools.auth.util;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import javax.naming.NamingException;
 import javax.naming.directory.NoSuchAttributeException;
@@ -37,13 +36,15 @@ public class Environment {
     }
 
     public Environment(String environment, String allAccessOu) {
-        Objects.requireNonNull(environment);
-
         this.environment = environment;
         this.allAccessOu = allAccessOu;
     }
 
     public void validate(String certificatePrincipal) throws NamingException {
+        if (StringUtils.isBlank(getEnvironment())) {
+            LOGGER.debug("No environment configured. Skipping Environment Cert verification.");
+            return;
+        }
 
         String ou = getLDAPAttribute(certificatePrincipal, OU);
         LOGGER.debug("OU from certificate: ", ou);

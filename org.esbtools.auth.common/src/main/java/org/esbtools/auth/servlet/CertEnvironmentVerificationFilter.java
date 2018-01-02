@@ -23,7 +23,7 @@ public class CertEnvironmentVerificationFilter implements Filter {
   private final Environment env;
 
   public CertEnvironmentVerificationFilter(String environment) {
-    env = (null == environment) ? null : new Environment(environment);
+    env = new Environment(environment);
 
     LOGGER.info("Cert Environment: " + ((environment == null) ? "Not Set" : environment));
   }
@@ -40,27 +40,22 @@ public class CertEnvironmentVerificationFilter implements Filter {
   
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-    if (null != env) {
-      LOGGER.debug("Attempting Environment Cert verification");
-      X509Certificate certChain[] = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+    LOGGER.debug("Attempting Environment Cert verification");
+    X509Certificate certChain[] = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
 
-      if ((null != certChain) && (certChain.length > 0)) {
-        LOGGER.debug("Verifying environment on cert");
-        String dn = certChain[0].getSubjectDN().getName();
-        try {
-          env.validate(dn);
-        }
-        catch (NamingException e) {
-          unsuccessfulAuthentication(request, response, e);
-          return; //end the chain
-        }
+    if ((null != certChain) && (certChain.length > 0)) {
+      LOGGER.debug("Verifying environment on cert");
+      String dn = certChain[0].getSubjectDN().getName();
+      try {
+        env.validate(dn);
       }
-      else {
-        LOGGER.debug("Cert not found. Skipping Environment Cert verification.");
+      catch (NamingException e) {
+        unsuccessfulAuthentication(request, response, e);
+        return; //end the chain
       }
     }
     else {
-      LOGGER.debug("No environment configured. Skipping Environment Cert verification.");
+      LOGGER.debug("Cert not found. Skipping Environment Cert verification.");
     }
 
     chain.doFilter(request, response);
