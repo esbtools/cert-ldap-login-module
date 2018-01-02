@@ -21,17 +21,17 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CertEnvironmentVerificationFilter.class);
 
-  private final Environment envUtils;
+  private final Environment environment;
 
   public CertEnvironmentVerificationFilter(String environment) {
-    envUtils = (null == environment) ? null : new Environment(environment);
+    this.environment = (null == environment) ? null : new Environment(environment);
 
     LOGGER.info("Cert Environment: " + ((environment == null) ? "Not Set" : environment));
   }
 
   @Override
   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-    if (null != envUtils) {
+    if (null != environment) {
       LOGGER.debug("Attempting Environment Cert verification");
       X509Certificate certChain[] = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
 
@@ -39,7 +39,7 @@ public class CertEnvironmentVerificationFilter extends OncePerRequestFilter {
         LOGGER.debug("Verifying environment on cert");
         String dn = certChain[0].getSubjectDN().getName();
         try {
-          envUtils.validate(dn);
+          environment.validate(dn);
         }
         catch (NamingException e) {
           unsuccessfulAuthentication(request, response,
