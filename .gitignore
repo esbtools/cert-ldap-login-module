@@ -26,3 +26,4 @@ www/*/src/main/webapp/gwt
 .springBeans
 *.versionsBackup
 .idea/
+dependency-reduced-pom.xml
