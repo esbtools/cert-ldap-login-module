@@ -16,9 +16,15 @@ public class EnvironmentTest {
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
-    @Test(expected = NullPointerException.class)
     public void testValidate_NullEnvironment() throws Exception {
-        new Environment(null);
+        new Environment(null)
+            .validate("ou=someuser,l=dev");
+    }
+    
+    @Test
+    public void testValidate_EmptyEnvironment() throws Exception {
+        new Environment("")
+            .validate("ou=someuser,l=dev");
     }
 
     @Test
