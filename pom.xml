@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <groupId>org.sonatype.oss</groupId>
     <artifactId>oss-parent</artifactId>
@@ -27,20 +28,22 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <maven.compiler.showWarnings>true</maven.compiler.showWarnings>
-      <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
-      <maven.compiler.debuglevel>lines,vars,source</maven.compiler.debuglevel>
-      <maven.compiler.verbose>true</maven.compiler.verbose>
-      <sonar.projectName>esbtools: jboss-cert-ldap-login-module</sonar.projectName>
-      <sonar.exclusions>**/*Test.java,**/*Exception.java</sonar.exclusions>
+    <slf4j.version>1.7.25</slf4j.version>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.showWarnings>true</maven.compiler.showWarnings>
+    <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
+    <maven.compiler.debuglevel>lines,vars,source</maven.compiler.debuglevel>
+    <maven.compiler.verbose>true</maven.compiler.verbose>
+    <sonar.projectName>esbtools: jboss-cert-ldap-login-module</sonar.projectName>
+    <sonar.exclusions>**/*Test.java,**/*Exception.java</sonar.exclusions>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.25</version>
+      <version>${slf4j.version}</version>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -53,7 +56,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>1.7.21</version>
+      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -76,6 +79,12 @@
         <groupId>org.esbtools.auth</groupId>
         <artifactId>org.esbtools.auth.common</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>servlet-api</artifactId>
+        <version>2.5</version>
+        <scope>provided</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
