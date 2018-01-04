@@ -28,8 +28,6 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <slf4j.version>1.7.25</slf4j.version>
-
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.showWarnings>true</maven.compiler.showWarnings>
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
@@ -43,7 +41,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
+      <version>1.7.25</version>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -56,7 +54,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>${slf4j.version}</version>
+      <version>1.7.25</version>
       <scope>test</scope>
     </dependency>
     <dependency>

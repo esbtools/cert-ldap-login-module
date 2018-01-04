@@ -151,10 +151,9 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
 
             LOGGER.debug("Certificate principal:" + certPrincipal);
 
-            //first try getting search name from uid in certificate principle (new certificates)
             String searchName = environment.getLDAPAttribute(certPrincipal, UID);
             if (StringUtils.isBlank(searchName)) {
-                throw new LoginException("A certificate is required.");
+                throw new LoginException("A certificate with a UID attribute in the subject name is required.");
             }
 
             environment.validate(certPrincipal);
