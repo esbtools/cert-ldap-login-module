@@ -18,30 +18,27 @@
  */
 package org.esbtools.auth.jboss;
 
-import org.esbtools.auth.ldap.LdapConfiguration;
-import org.esbtools.auth.ldap.LdapRolesProvider;
-import org.esbtools.auth.util.CachedRolesProvider;
-import org.esbtools.auth.util.RolesCache;
-import org.esbtools.auth.util.RolesProvider;
-import org.apache.commons.lang.StringUtils;
-import org.jboss.security.SimpleGroup;
-import org.jboss.security.auth.spi.BaseCertLoginModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.naming.NamingException;
-import javax.naming.directory.NoSuchAttributeException;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
-import javax.security.auth.Subject;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginException;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.LoginException;
+
+import org.apache.commons.lang.StringUtils;
+import org.esbtools.auth.ldap.LdapConfiguration;
+import org.esbtools.auth.ldap.LdapRolesProvider;
+import org.esbtools.auth.util.CachedRolesProvider;
+import org.esbtools.auth.util.Environment;
+import org.esbtools.auth.util.RolesCache;
+import org.esbtools.auth.util.RolesProvider;
+import org.jboss.security.SimpleGroup;
+import org.jboss.security.auth.spi.BaseCertLoginModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CertLdapLoginModule extends BaseCertLoginModule {
 
@@ -75,14 +72,8 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
 
     public static final String UID = "uid";
     public static final String CN = "cn";
-    public static final String LOCATION = "l";
-    public static final String OU = "ou";
 
-    public static final String ENVIRONMENT_SEPARATOR= ",";
-
-    private static String environment;
-    private static String allAccessOu;
-
+    private static volatile Environment environment;
     private static volatile RolesProvider rolesProvider = null;
 
     @Override
@@ -97,8 +88,9 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
         if (rolesProvider == null) {
             synchronized(LdapRolesProvider.class) {
                 if (rolesProvider == null) {
-                    environment = (String) options.get(ENVIRONMENT);
-                    allAccessOu = (String) options.get(ALL_ACCESS_OU);
+                    String env = (String) options.get(ENVIRONMENT);
+                    String allAccessOu = (String) options.get(ALL_ACCESS_OU);
+                    environment = new Environment(env, allAccessOu);
 
                     LdapConfiguration ldapConf = new LdapConfiguration();
                     ldapConf.server((String) options.get(SERVER));
@@ -159,15 +151,12 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
 
             LOGGER.debug("Certificate principal:" + certPrincipal);
 
-            //first try getting search name from uid in certificate principle (new certificates)
-            String searchName = getLDAPAttribute(certPrincipal, UID);
-            if(StringUtils.isNotBlank(searchName)) {
-                //only try to validate environment if it is a certificate that contains uid
-                validateEnvironment(certPrincipal);
-            } else {
-                // fallback to getting search name from cn in certificate principle (legacy certificates)
-                searchName = getLDAPAttribute(certPrincipal, CN);
+            String searchName = environment.getLDAPAttribute(certPrincipal, UID);
+            if (StringUtils.isBlank(searchName)) {
+                throw new LoginException("A certificate with a UID attribute in the subject name is required.");
             }
+
+            environment.validate(certPrincipal);
 
             Collection<String> groupNames = rolesProvider.getUserRoles(searchName);
 
@@ -193,55 +182,4 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
         return roleSets;
     }
 
-    private void validateEnvironment(String certificatePrincipal) throws NamingException {
-
-        String ou = getLDAPAttribute(certificatePrincipal, OU);
-        LOGGER.debug("OU from certificate: ", ou);
-        String location = getLDAPAttribute(certificatePrincipal, LOCATION);
-        LOGGER.debug("Location from certificate: ", location);
-
-        if(StringUtils.isBlank(ou)) {
-            throw new NoSuchAttributeException("No ou in dn, you may need to update your certificate: " + certificatePrincipal);
-        } else {
-            if(allAccessOu.equalsIgnoreCase(StringUtils.replace(ou, " ", ""))){
-                LOGGER.debug("Skipping environment validation, user ou matches {} ", allAccessOu);
-            } else {
-                //if dn not from allAccessOu, verify the location (l) field
-                //in the cert matches the configured environment
-                if(StringUtils.isBlank(location)) {
-                    throw new NoSuchAttributeException("No location in dn, you may need to update your certificate: " + certificatePrincipal);
-                } else if(!locationMatchesEnvironment(location)){
-                    throw new NoSuchAttributeException("Invalid location from dn, expected " + environment + " but found l=" + location);
-                }
-            }
-        }
-    }
-
-    private String getLDAPAttribute(String certificatePrincipal, String searchAttribute) throws NamingException {
-        String searchName = new String();
-        LdapName name = new LdapName(certificatePrincipal);
-        for (Rdn rdn : name.getRdns()) {
-            if (rdn.getType().equalsIgnoreCase(searchAttribute)) {
-                searchName = (String) rdn.getValue();
-                break;
-            }
-        }
-        return searchName;
-    }
-
-    private boolean locationMatchesEnvironment(String location) {
-        List<String> environments;
-        if(environment.contains(ENVIRONMENT_SEPARATOR)) {
-            environments = Arrays.asList(environment.split(ENVIRONMENT_SEPARATOR));
-
-        } else {
-            environments = Arrays.asList(new String[] {environment});
-        }
-        for(String environment : environments) {
-            if(environment.equalsIgnoreCase(location)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
