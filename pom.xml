@@ -252,6 +252,6 @@
   <modules>
     <module>spring-cert-ldap-login-module</module>
     <module>jboss-cert-ldap-login-module</module>
-    <module>org.esbtools.auth.common</module>
+    <module>cert-ldap-login-module-common</module>
   </modules>
 </project>
