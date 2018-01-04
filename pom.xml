@@ -75,7 +75,7 @@
     <dependencies>
       <dependency>
         <groupId>org.esbtools.auth</groupId>
-        <artifactId>org.esbtools.auth.common</artifactId>
+        <artifactId>cert-ldap-login-module-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -250,8 +250,8 @@
     </profile>
   </profiles>
   <modules>
+    <module>cert-ldap-login-module-common</module>
     <module>spring-cert-ldap-login-module</module>
     <module>jboss-cert-ldap-login-module</module>
-    <module>cert-ldap-login-module-common</module>
   </modules>
 </project>
