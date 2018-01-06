@@ -142,7 +142,7 @@ public class LdapRolesProvider implements RolesProvider {
 
         connectionPool = new LDAPConnectionPool(
             ldapConnection,
-            ldapConfiguration.getPoolSize() / 2,
+            /* initialConnections */ ldapConfiguration.getPoolSize() / 2,
             ldapConfiguration.getPoolSize(),
             /* postConnectProcessor */ null,
             /* throwOnConnectFailure */ false
