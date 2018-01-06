@@ -140,12 +140,17 @@ public class LdapRolesProvider implements RolesProvider {
             throw new LDAPException(bindResult.getResultCode(), "Error binding to LDAP");
         }
 
-        connectionPool = new LDAPConnectionPool(ldapConnection, ldapConfiguration.getPoolSize());
+        connectionPool = new LDAPConnectionPool(
+            ldapConnection,
+            ldapConfiguration.getPoolSize() / 2,
+            ldapConfiguration.getPoolSize(),
+            /* postConnectProcessor */ null,
+            /* throwOnConnectFailure */ false
+            );
         connectionPool.setMaxConnectionAgeMillis(ldapConfiguration.getPoolMaxConnectionAgeMS());
         LOGGER.info("Initialized LDAPConnectionPool: poolSize={}, poolMaxAge={}, connectionTimeout={}, responseTimeout={}, debug={}, keepAlive={}.",
                 ldapConfiguration.getPoolSize(), ldapConfiguration.getPoolMaxConnectionAgeMS(), ldapConfiguration.getConnectionTimeoutMS(), ldapConfiguration.getResponseTimeoutMS(),
                 ldapConfiguration.isDebug(), ldapConfiguration.isKeepAlive());
-
     }
 
     @Override
