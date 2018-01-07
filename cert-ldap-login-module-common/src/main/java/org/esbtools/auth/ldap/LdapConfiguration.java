@@ -34,6 +34,7 @@ public class LdapConfiguration {
     private Integer responseTimeoutMS = 3000; // time to wait until receiving response from ldap
     private boolean debug = false;
     private boolean keepAlive = true;
+    private Integer retryIntervalSeconds = 5;
 
     public LdapConfiguration server (String server) {
         this.server = server;
@@ -150,5 +151,32 @@ public class LdapConfiguration {
     public LdapConfiguration poolMaxConnectionAgeMS(Integer poolMaxConnectionAgeMS) {
         this.poolMaxConnectionAgeMS = poolMaxConnectionAgeMS;
         return this;
+    }
+
+    public Integer getRetryIntervalSeconds() {
+        return retryIntervalSeconds;
+    }
+
+    public LdapConfiguration retryIntervalSeconds(Integer retryIntervalSeconds) {
+        this.retryIntervalSeconds = retryIntervalSeconds;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "LdapConfiguration{" +
+            "server='" + server + '\'' +
+            ", port=" + port +
+            ", bindDn='" + bindDn + '\'' +
+            ", useSSL=" + useSSL +
+            ", trustStore='" + trustStore + '\'' +
+            ", poolSize=" + poolSize +
+            ", poolMaxConnectionAgeMS=" + poolMaxConnectionAgeMS +
+            ", connectionTimeoutMS=" + connectionTimeoutMS +
+            ", responseTimeoutMS=" + responseTimeoutMS +
+            ", debug=" + debug +
+            ", keepAlive=" + keepAlive +
+            ", retryIntervalSeconds=" + retryIntervalSeconds +
+            '}';
     }
 }
