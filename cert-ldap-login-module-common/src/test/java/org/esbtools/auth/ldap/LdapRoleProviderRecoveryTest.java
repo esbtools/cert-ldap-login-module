@@ -9,6 +9,7 @@ import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
 import com.unboundid.ldap.listener.InMemoryListenerConfig;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.LDAPException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,6 +38,11 @@ public class LdapRoleProviderRecoveryTest {
     ldapServer.add("dc=com", new Attribute("objectClass", "top"),
         new Attribute("objectClass", "domain"),
         new Attribute("dc", "com"));
+  }
+
+  @After
+  public void stopLdapServer() {
+    ldapServer.shutDown(true);
   }
 
   @Test
