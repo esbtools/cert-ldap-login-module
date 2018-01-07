@@ -121,7 +121,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
                         ldapConf.poolMaxConnectionAgeMS(Integer.parseInt((String)options.get(POOL_MAX_CONNECTION_AGE_MS)));
                     }
                     if (options.containsKey(RETRY_INTERVAL_SECONDS)) {
-                        ldapConf.retryIntervalSeconds(Integer.parseInt((String) options.get(RETRY_INTERVAL_SECONDS)))
+                        ldapConf.retryIntervalSeconds(Integer.parseInt((String) options.get(RETRY_INTERVAL_SECONDS)));
                     }
 
                     int rolesCacheExpiry = 5*60*1000; // default 5 minutes
