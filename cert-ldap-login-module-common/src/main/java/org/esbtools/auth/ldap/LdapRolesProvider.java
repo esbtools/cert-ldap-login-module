@@ -162,7 +162,7 @@ public class LdapRolesProvider implements RolesProvider {
         // prevent potentially many requests from waiting potentially a long wait. We do this via
         // atomic compare and swap: see if attemptingConnect flag is false, and if so set it as one
         // atomic operation. If attemptingConnect is true, we fail fast.
-        if (!attemptingConnect.compareAndSet(/*expect*/ false, /*if false then set to*/ true)) {
+        if (!attemptingConnect.compareAndSet(/*expect*/ false, /*update*/ true)) {
             // attemptingConnect was true, which means another thread is connecting. Fail fast now
             // instead of blocking.
             throw lastSeenConnectionException();
