@@ -69,7 +69,7 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
             AUTH_ROLE_NAME, SERVER, PORT, SEARCH_BASE, BIND_DN, BIND_PWD, USE_SSL,
             TRUST_STORE, TRUST_STORE_PASSWORD, POOL_SIZE, POOL_MAX_CONNECTION_AGE_MS,
             CONNECTION_TIMEOUT_MS,RESPONSE_TIMEOUT_MS,DEBUG,KEEP_ALIVE,
-            ROLES_CACHE_EXPIRY_MS, ENVIRONMENT, ALL_ACCESS_OU};
+            ROLES_CACHE_EXPIRY_MS, ENVIRONMENT, ALL_ACCESS_OU, RETRY_INTERVAL_SECONDS};
 
     public static final String UID = "uid";
     public static final String CN = "cn";
