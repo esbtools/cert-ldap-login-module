@@ -155,8 +155,16 @@ public class LdapRolesProvider implements RolesProvider {
             throw lastSeenConnectionException();
         }
 
+        // Multiple threads can get to this point, but establishing a connection is not thread safe
+        // (see LDAPConnection#connect), so we must synchronize access. Instead of blocking all
+        // threads except the one that makes it to this point and wins the race to connect, we fail
+        // the "loser" threads fast like when the connection retry interval has not been met, to
+        // prevent potentially many requests from waiting potentially a long wait. We do this via
+        // atomic compare and swap: see if attemptingConnect flag is false, and if so set it as one
+        // atomic operation. If attemptingConnect is true, we fail fast.
         if (!attemptingConnect.compareAndSet(/*expect*/ false, /*if false then set to*/ true)) {
-            // Race for connection attempt... this thread lost.
+            // attemptingConnect was true, which means another thread is connecting. Fail fast now
+            // instead of blocking.
             throw lastSeenConnectionException();
         }
 
