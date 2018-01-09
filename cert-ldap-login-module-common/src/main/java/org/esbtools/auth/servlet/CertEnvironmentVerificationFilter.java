@@ -37,7 +37,7 @@ public class CertEnvironmentVerificationFilter implements Filter {
   public void destroy() {
     //Do Nothing!
   }
-  
+
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
     LOGGER.debug("Attempting Environment Cert verification");
@@ -66,10 +66,9 @@ public class CertEnvironmentVerificationFilter implements Filter {
     if (response instanceof HttpServletResponse) {
        ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
-    
+
     response.setContentType("text/html");
     response.getWriter().write("<html><head><title>Error</title></head><body>" + failed.getMessage() + "</body></html>");
-    response.getWriter().close();
   }
 
 }
