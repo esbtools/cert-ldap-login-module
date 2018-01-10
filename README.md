@@ -120,13 +120,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .authenticationUserDetailsService(ldapUserDetailsService)
                 .and()
                 .addFilterAfter(
-                    new EsbToolsExceptionTraslatingFilter(new ErrorResponseWriter() {
-                        //...
-                    }),
-                    ExceptionTranslationFilter.class)
-                .addFilterAfter(
-                    new SpringCertEnvironmentVerificationFilter("expectedEnvironment"),
-                    EsbToolsExceptionTraslatingFilter.class);
+                        new CertEnvironmentVerificationFilter(environment), X509AuthenticationFilter.class);
 
         //...
     }
