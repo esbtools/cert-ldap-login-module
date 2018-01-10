@@ -63,12 +63,13 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
     public static final String ROLES_CACHE_EXPIRY_MS = "rolesCacheExpiryMS";
     public static final String ENVIRONMENT = "environment";
     public static final String ALL_ACCESS_OU = "allAccessOu";
+    public static final String RETRY_INTERVAL_SECONDS = "retryIntervalSeconds";
 
     private static final String[] ALL_VALID_OPTIONS = {
             AUTH_ROLE_NAME, SERVER, PORT, SEARCH_BASE, BIND_DN, BIND_PWD, USE_SSL,
             TRUST_STORE, TRUST_STORE_PASSWORD, POOL_SIZE, POOL_MAX_CONNECTION_AGE_MS,
             CONNECTION_TIMEOUT_MS,RESPONSE_TIMEOUT_MS,DEBUG,KEEP_ALIVE,
-            ROLES_CACHE_EXPIRY_MS, ENVIRONMENT, ALL_ACCESS_OU};
+            ROLES_CACHE_EXPIRY_MS, ENVIRONMENT, ALL_ACCESS_OU, RETRY_INTERVAL_SECONDS};
 
     public static final String UID = "uid";
     public static final String CN = "cn";
@@ -119,13 +120,16 @@ public class CertLdapLoginModule extends BaseCertLoginModule {
                     if (options.containsKey(POOL_MAX_CONNECTION_AGE_MS)) {
                         ldapConf.poolMaxConnectionAgeMS(Integer.parseInt((String)options.get(POOL_MAX_CONNECTION_AGE_MS)));
                     }
+                    if (options.containsKey(RETRY_INTERVAL_SECONDS)) {
+                        ldapConf.retryIntervalSeconds(Integer.parseInt((String) options.get(RETRY_INTERVAL_SECONDS)));
+                    }
 
                     int rolesCacheExpiry = 5*60*1000; // default 5 minutes
                     if (options.containsKey(ROLES_CACHE_EXPIRY_MS)) {
                         rolesCacheExpiry = Integer.parseInt((String)options.get(ROLES_CACHE_EXPIRY_MS));
                     }
 
-                    rolesProvider = new CachedRolesProvider(new LdapRolesProvider(searchBase, ldapConf), new RolesCache(rolesCacheExpiry));
+                    rolesProvider = new CachedRolesProvider(new LdapRolesProvider(searchBase, ldapConf, false), new RolesCache(rolesCacheExpiry));
                 }
             }
         }

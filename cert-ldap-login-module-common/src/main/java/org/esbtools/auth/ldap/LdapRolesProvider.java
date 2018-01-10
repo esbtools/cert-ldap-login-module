@@ -19,7 +19,6 @@
 package org.esbtools.auth.ldap;
 
 import org.esbtools.auth.util.RolesProvider;
-import com.unboundid.ldap.sdk.BindRequest;
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPConnection;
@@ -32,7 +31,6 @@ import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import com.unboundid.ldap.sdk.SimpleBindRequest;
 import com.unboundid.util.DebugType;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustStoreTrustManager;
@@ -40,11 +38,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSocketFactory;
+import java.security.GeneralSecurityException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -59,16 +61,29 @@ import java.util.Set;
  *
  */
 public class LdapRolesProvider implements RolesProvider {
-    private final Logger LOGGER = LoggerFactory.getLogger(LdapRolesProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LdapRolesProvider.class);
 
-    private String searchBase;
+    private final String searchBase;
 
-    private LdapConfiguration ldapConfiguration;
+    private final LdapConfiguration ldapConfiguration;
+
+    private final LDAPConnection ldapConnection;
 
     // Connection pool needs to be a singleton
+    /**
+     * @{code null} until {@link #connectIfNeeded()} is called and successful.
+     */
     private LDAPConnectionPool connectionPool;
+    private volatile LDAPException connectionException;
+    private volatile Instant lastConnectionAttempt;
+    private final AtomicBoolean attemptingConnect = new AtomicBoolean(false);
 
     public LdapRolesProvider(String searchBase, LdapConfiguration ldapConfiguration) throws Exception {
+        this(searchBase, ldapConfiguration, true);
+    }
+
+    public LdapRolesProvider(String searchBase, LdapConfiguration ldapConfiguration,
+            boolean failFast) throws Exception {
         LOGGER.debug("Creating esbtoolsLdapRoleProvider");
 
         Objects.requireNonNull(searchBase);
@@ -76,12 +91,21 @@ public class LdapRolesProvider implements RolesProvider {
 
         this.searchBase = searchBase;
         this.ldapConfiguration = ldapConfiguration;
+        this.ldapConnection = getLdapConnection(ldapConfiguration);
 
-        initializeFromConfiguration();
+        try {
+            connectIfNeeded();
+        } catch (LDAPException e) {
+            if (failFast) {
+                throw e;
+            } else {
+                LOGGER.warn("Failed to connect to LDAP server, will retry on next lookup after " +
+                    "{} seconds.", ldapConfiguration.getRetryIntervalSeconds(), e);
+            }
+        }
     }
 
-    private void initializeFromConfiguration() throws Exception {
-
+    private static LDAPConnection getLdapConnection(LdapConfiguration ldapConfiguration) throws GeneralSecurityException {
         if (ldapConfiguration.isDebug()) {
             // bridge java.util.Logger output to log4j
             System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
@@ -103,49 +127,86 @@ public class LdapRolesProvider implements RolesProvider {
         // A flag that indicates whether to use the SO_KEEPALIVE socket option to attempt to more quickly detect when idle TCP connections have been lost or to prevent them from being unexpectedly closed by intermediate network hardware. By default, the SO_KEEPALIVE socket option will be used.
         options.setUseKeepAlive(ldapConfiguration.isKeepAlive());
 
-
-        if(ldapConfiguration.getUseSSL()) {
+        if (ldapConfiguration.getUseSSL()) {
             TrustStoreTrustManager trustStoreTrustManager = new TrustStoreTrustManager(
-                    ldapConfiguration.getTrustStore(),
-                    ldapConfiguration.getTrustStorePassword().toCharArray(),
-                    "JKS",
-                    true);
+                ldapConfiguration.getTrustStore(),
+                ldapConfiguration.getTrustStorePassword().toCharArray(),
+                "JKS",
+                true);
             SSLSocketFactory socketFactory = new SSLUtil(trustStoreTrustManager).createSSLSocketFactory();
 
-            ldapConnection = new LDAPConnection(
-                    socketFactory,
-                    options,
-                    ldapConfiguration.getServer(),
-                    ldapConfiguration.getPort(),
-                    ldapConfiguration.getBindDn(),
-                    ldapConfiguration.getBindDNPwd()
-            );
+            ldapConnection = new LDAPConnection(socketFactory, options);
         } else {
             LOGGER.warn("Not using SSL to connect to ldap. This is very insecure - do not use in prod environments!");
 
-            ldapConnection = new LDAPConnection(
-                    options,
+            ldapConnection = new LDAPConnection(options);
+        }
+
+        return ldapConnection;
+    }
+
+    private void connectIfNeeded() throws LDAPException {
+        if (connectionPool != null) {
+            return;
+        }
+
+        if (!readyForConnectionAttempt()) {
+            // It's too early to retry connecting again.
+            throw lastSeenConnectionException();
+        }
+
+        // Multiple threads can get to this point, but establishing a connection is not thread safe
+        // (see LDAPConnection#connect), so we must synchronize access. Instead of blocking all
+        // threads except the one that makes it to this point and wins the race to connect, we fail
+        // the "loser" threads fast like when the connection retry interval has not been met, to
+        // prevent potentially many requests from waiting potentially a long wait. We do this via
+        // atomic compare and swap: see if attemptingConnect flag is false, and if so set it as one
+        // atomic operation. If attemptingConnect is true, we fail fast.
+        if (!attemptingConnect.compareAndSet(/*expect*/ false, /*update*/ true)) {
+            // attemptingConnect was true, which means another thread is connecting. Fail fast now
+            // instead of blocking.
+            throw lastSeenConnectionException();
+        }
+
+        try {
+            if (lastConnectionAttempt != null) {
+                LOGGER.info("Connection retry interval ({} seconds) passed, " +
+                    "attempting connection recovery to LDAP at {}:{}",
+                    ldapConfiguration.getRetryIntervalSeconds(),
                     ldapConfiguration.getServer(),
-                    ldapConfiguration.getPort(),
-                    ldapConfiguration.getBindDn(),
-                    ldapConfiguration.getBindDNPwd()
-            );
-        }
+                    ldapConfiguration.getPort());
+            }
 
-        BindRequest bindRequest = new SimpleBindRequest(ldapConfiguration.getBindDn(), ldapConfiguration.getBindDNPwd());
-        BindResult bindResult = ldapConnection.bind(bindRequest);
+            lastConnectionAttempt = Instant.now();
+            BindResult bindResult = null;
 
-        if (bindResult.getResultCode() != ResultCode.SUCCESS) {
-            LOGGER.error("Error binding to LDAP" + bindResult.getResultCode());
-            throw new LDAPException(bindResult.getResultCode(), "Error binding to LDAP");
-        }
+            if (!ldapConnection.isConnected()) {
+                ldapConnection.connect(
+                    ldapConfiguration.getServer(), ldapConfiguration.getPort());
+                bindResult = ldapConnection.bind(
+                    ldapConfiguration.getBindDn(), ldapConfiguration.getBindDNPwd());
+            } else if (ldapConnection.getLastBindRequest() == null) {
+                bindResult = ldapConnection.bind(
+                    ldapConfiguration.getBindDn(), ldapConfiguration.getBindDNPwd());
+            }
 
-        connectionPool = new LDAPConnectionPool(ldapConnection, ldapConfiguration.getPoolSize());
-        connectionPool.setMaxConnectionAgeMillis(ldapConfiguration.getPoolMaxConnectionAgeMS());
-        LOGGER.info("Initialized LDAPConnectionPool: poolSize={}, poolMaxAge={}, connectionTimeout={}, responseTimeout={}, debug={}, keepAlive={}.",
+            if (bindResult != null && bindResult.getResultCode() != ResultCode.SUCCESS) {
+                LOGGER.error("Error binding to LDAP" + bindResult.getResultCode());
+                throw new LDAPException(bindResult.getResultCode(), "Error binding to LDAP");
+            }
+
+            connectionPool = new LDAPConnectionPool(ldapConnection, ldapConfiguration.getPoolSize());
+            connectionPool.setMaxConnectionAgeMillis(ldapConfiguration.getPoolMaxConnectionAgeMS());
+
+            LOGGER.info("Initialized LDAPConnectionPool: poolSize={}, poolMaxAge={}, connectionTimeout={}, responseTimeout={}, debug={}, keepAlive={}.",
                 ldapConfiguration.getPoolSize(), ldapConfiguration.getPoolMaxConnectionAgeMS(), ldapConfiguration.getConnectionTimeoutMS(), ldapConfiguration.getResponseTimeoutMS(),
                 ldapConfiguration.isDebug(), ldapConfiguration.isKeepAlive());
-
+        } catch (LDAPException e) {
+            connectionException = e;
+            throw e;
+        } finally {
+            attemptingConnect.set(false);
+        }
     }
 
     @Override
@@ -153,6 +214,8 @@ public class LdapRolesProvider implements RolesProvider {
         LOGGER.debug("getRoles("+username+")");
 
         Objects.requireNonNull(username);
+
+        connectIfNeeded();
 
         Set<String> roles = new HashSet<>();
 
@@ -187,4 +250,25 @@ public class LdapRolesProvider implements RolesProvider {
         return roles;
     }
 
+    private LDAPException lastSeenConnectionException() {
+        if (connectionException == null) {
+            throw new IllegalStateException("Expected connection exception, but was null. There " +
+                "was probably a problem connecting but the exception is unknown. Please report " +
+                "this bug to maintainers: " +
+                "https://github.com/esbtools/cert-ldap-login-module/issues/new");
+        }
+
+        return connectionException;
+    }
+
+    private boolean readyForConnectionAttempt() {
+        if (lastConnectionAttempt == null) {
+            return true;
+        }
+
+        Duration timeSinceLastAttempt = Duration.between(lastConnectionAttempt, Instant.now());
+        Duration retryInterval = Duration.ofSeconds(ldapConfiguration.getRetryIntervalSeconds());
+
+        return timeSinceLastAttempt.compareTo(retryInterval) >= 0;
+    }
 }

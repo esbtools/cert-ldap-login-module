@@ -24,11 +24,11 @@ public class LdapUserDetailsService implements UserDetailsService, Authenticatio
     private final RolesProvider rolesProvider;
 
     public LdapUserDetailsService(String searchBase, LdapConfiguration ldapConfiguration, int rolesCacheExpiryMS) throws Exception {
-      this(new LdapRolesProvider(searchBase, ldapConfiguration), rolesCacheExpiryMS);
+      this(new LdapRolesProvider(searchBase, ldapConfiguration, false), rolesCacheExpiryMS);
     }
     
     public LdapUserDetailsService(String searchBase, LdapConfiguration ldapConfiguration) throws Exception {
-      this(new LdapRolesProvider(searchBase, ldapConfiguration));
+      this(new LdapRolesProvider(searchBase, ldapConfiguration, false));
     }
     
     public LdapUserDetailsService(LdapRolesProvider rolesProvider, int rolesCacheExpiryMS) {
