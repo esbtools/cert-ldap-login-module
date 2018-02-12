@@ -179,4 +179,60 @@ public class LdapConfiguration {
             ", retryIntervalSeconds=" + retryIntervalSeconds +
             '}';
     }
+
+    public void setServer(String server) {
+      this.server = server;
+    }
+
+    public void setPort(Integer port) {
+      this.port = port;
+    }
+
+    public void setBindDn(String bindDn) {
+      this.bindDn = bindDn;
+    }
+
+    public void setBindDNPwd(String bindDNPwd) {
+      this.bindDNPwd = bindDNPwd;
+    }
+
+    public void setUseSSL(Boolean useSSL) {
+      this.useSSL = useSSL;
+    }
+
+    public void setTrustStore(String trustStore) {
+      this.trustStore = trustStore;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+      this.trustStorePassword = trustStorePassword;
+    }
+
+    public void setPoolSize(Integer poolSize) {
+      this.poolSize = poolSize;
+    }
+
+    public void setPoolMaxConnectionAgeMS(Integer poolMaxConnectionAgeMS) {
+      this.poolMaxConnectionAgeMS = poolMaxConnectionAgeMS;
+    }
+
+    public void setConnectionTimeoutMS(Integer connectionTimeoutMS) {
+      this.connectionTimeoutMS = connectionTimeoutMS;
+    }
+
+    public void setResponseTimeoutMS(Integer responseTimeoutMS) {
+      this.responseTimeoutMS = responseTimeoutMS;
+    }
+
+    public void setDebug(boolean debug) {
+      this.debug = debug;
+    }
+
+    public void setKeepAlive(boolean keepAlive) {
+      this.keepAlive = keepAlive;
+    }
+
+    public void setRetryIntervalSeconds(Integer retryIntervalSeconds) {
+      this.retryIntervalSeconds = retryIntervalSeconds;
+    }
 }
