@@ -3,7 +3,7 @@
 
 # How to configure authentication/authorization on JBoss
 
-In standalone.xml:
+## In standalone.xml:
 
 ```
 <subsystem xmlns="urn:jboss:domain:security:1.2">
@@ -32,7 +32,50 @@ In standalone.xml:
 
 # How to configure authentication/authorization in Spring Security
 
-Using annotation driven configuration:
+## Using Spring Boot and Configuration Properties
+
+``` java
+@Configuration
+@EnableConfigurationProperties
+public class ApplicationConfiguration {
+
+  @Bean
+  @ConfigurationProperties(prefix = "ldap")
+  public LdapConfiguration ldapConfiguration() {
+    return new LdapConfiguration();
+  }
+  
+  @Bean
+  public LdapUserDetailsService ldapUserDetailsService(
+      LdapConfiguration ldapConfiguration,
+      @Value("${ldap.user-details.search_base}") String searchBaseDn,
+      @Value("${ldap.user-details.rolesCacheExpiryMS}") int rolesCacheExpiryMS) throws Exception {
+    return new LdapUserDetailsService(searchBaseDn, ldapConfiguration, rolesCacheExpiryMS);
+  }
+}
+
+// Inject into filter chain as seen below or utilize standalone
+```
+
+```
+# application.properties
+ldap.server=foo.bar.com
+ldap.port=636
+ldap.bindDn=uid=userservice-jboss,ou=serviceaccounts,dc=redhat,dc=com
+ldap.bindDNPwd=password
+ldap.poolSize=5
+ldap.useSSL=true
+ldap.debug=false
+ldap.trustStorePassword=password
+ldap.connectionTimeoutMS=30000
+ldap.responseTimeoutMS=30000
+ldap.keepAlive=true
+ldap.poolMaxConnectionAgeMS=15000
+ldap.user-details.search_base=dc=redhat,dc=com
+ldap.user-details.rolesCacheExpiryMS=300000
+```
+
+## Using annotation driven configuration:
 
 ``` java
 import org.esbtools.auth.ldap.LdapConfiguration;
